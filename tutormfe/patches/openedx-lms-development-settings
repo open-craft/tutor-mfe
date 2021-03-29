@@ -1,0 +1,7 @@
+WRITABLE_GRADEBOOK_URL = "http://{{ MFE_HOST }}:1994{{ GRADEBOOK_PUBLIC_PATH }}"
+
+{% for plugin, mfe in iter_data_patches("mfe") %}
+# {{ plugin }}
+CORS_ORIGIN_WHITELIST.append("{{ MFE_HOST }}:{{ mfe.service_port }}")
+LOGIN_REDIRECT_WHITELIST.append("{{ MFE_HOST }}:{{ mfe.service_port }}")
+{% endfor %}

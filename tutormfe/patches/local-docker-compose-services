@@ -1,0 +1,9 @@
+{% for plugin, mfe in iter_data_patches("mfe") %}:
+# {{ plugin }} MFE
+{{ mfe.service_name }}:
+    image: {{ DOCKER_IMAGE_CADDY }}
+    restart: unless-stopped
+    volumes:
+        - ../plugins/{{ plugin }}/apps/Caddyfile:/etc/caddy/Caddyfile:ro
+        - ../../data/{{ plugin }}/dist/:/openedx/app/dist/:ro
+{% endfor %}

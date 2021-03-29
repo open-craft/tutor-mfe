@@ -2,5 +2,10 @@
     handle / {
         respond 204
     }
-    {{ patch("mfe-caddyfile-site")|indent(4) }}
+    {% for plugin, mfe in iter_data_patches("mfe") %}
+    # {{ plugin }}
+    handle {{ mfe.public_path }}/* {
+        reverse_proxy {{ mfe.service_name }}:{{ mfe.service_port }}
+    }
+    {% endfor %}
 }
