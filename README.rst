@@ -102,7 +102,7 @@ Adding custom translations to your MFEs
 This plugin makes it possible to change existing and add new translation strings to MFEs. Here is how to do it:
 
 1. Identify the ID of the string you would like to translate. For instance, the ID of the "Account Information" string in the account MFE is "account.settings.section.account.information" (see `source <https://github.com/edx/frontend-app-account/blob/1444831833cad4746b9ed14618a499b425ccc907/src/account-settings/AccountSettingsPage.messages.jsx#L34>`__).
-2. Create a folder and i18n file corresponding to your MFE app and language in the Tutor root. This location of this file should be ``/path/to/tutor/env/plugins/mfe/build/mfe/i18n/<app name>/<language code>.json``. For instance, to add French ("fr") translation strings to the account MFE, run:
+2. Create a folder and i18n file corresponding to your MFE app and language in the Tutor root. This location of this file should be ``/path/to/tutor/env/plugins/mfe/build/mfe/i18n/<app name>/<language code>.json``. For instance, to add French ("fr") translation strings to the account MFE, run::
 
     cd "$(tutor config printroot)/env/plugins/mfe/build/mfe/i18n/"
     mkdir account
@@ -120,6 +120,27 @@ This plugin makes it possible to change existing and add new translation strings
     tutor local start -d
 
 Your custom translation strings should now appear in your app.
+
+Customise MFEs Logos
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To change the MFEs logos from the default to your own logos, override the corresponding settings in the MFEs environment using patches `mfe-env-production` and `mfe-env-development`. For example, using the following plugin:
+::
+
+    name: mfe_branding_plugin
+    version: 0.1.0
+    patches:
+    mfe-env-development: |
+        LOGO_URL=<URL>/logo.svg
+        LOGO_TRADEMARK_URL=<URL>/logo-trademark.svg
+        LOGO_WHITE_URL=<URL>/logo-white.svg
+        FAVICON_URL=<URL>/favicon.ico
+    mfe-env-production: |
+        LOGO_URL=<URL>/logo.svg
+        LOGO_TRADEMARK_URL=<URL>/logo-trademark.svg
+        LOGO_WHITE_URL=<URL>/logo-white.svg
+        FAVICON_URL=<URL>/favicon.ico
+
 
 Running MFEs on Kubernetes
 --------------------------
