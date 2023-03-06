@@ -44,6 +44,12 @@ config = {
                 },
             },
         },
+        "DISCUSSIONS_MFE_APP": {
+            "name": "discussions",
+            "repository": "https://github.com/open-craft/frontend-app-discussions",
+            "port": 2002,
+            "version": "opencraft-release/nutmeg.2"
+        },
     },
 }
 

@@ -9,6 +9,11 @@ ENABLE_NEW_RELIC=false
 FAVICON_URL={% if ENABLE_HTTPS %}https{% else %}http{% endif %}://{{ LMS_HOST }}/favicon.ico
 LANGUAGE_PREFERENCE_COOKIE_NAME=openedx-language-preference
 LMS_BASE_URL={% if ENABLE_HTTPS %}https{% else %}http{% endif %}://{{ LMS_HOST }}
+{%- if MFE_LEARNING_MFE_APP %}
+LEARNING_BASE_URL={{ "https" if ENABLE_HTTPS else "http" }}://{{ MFE_HOST }}/{{ MFE_LEARNING_MFE_APP["name"] }}
+{% else %}
+LEARNING_BASE_URL=
+{%- endif %}
 LOGIN_URL={% if ENABLE_HTTPS %}https{% else %}http{% endif %}://{{ LMS_HOST }}/login
 LOGO_URL={% if ENABLE_HTTPS %}https{% else %}http{% endif %}://{{ LMS_HOST }}/theming/asset/images/logo.png
 LOGO_TRADEMARK_URL={% if ENABLE_HTTPS %}https{% else %}http{% endif %}://{{ LMS_HOST }}/theming/asset/images/logo.png

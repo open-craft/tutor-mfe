@@ -66,6 +66,14 @@ Profile
 
 Edit and display user-specific profile information. The profile page of every user is visible at ``http(s)://{{ MFE_HOST }}/profile/u/{{ username }}``. For instance, when running locally, the profile page of the "admin" user is: http://apps.local.overhang.io/profile/u/admin.
 
+Discussions
+~~~~~~~~~~~
+
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/discussions.png
+    :alt: Discussions MFE screenshot
+
+The Discussions MFE updates the previous discussions UI with a new look and better features.
+
 MFE management
 --------------
 
@@ -102,6 +110,7 @@ To disable an existing MFE, set its corresponding configuration setting to "null
     tutor config save --set MFE_ACCOUNT_MFE_APP=null
     tutor config save --set MFE_GRADEBOOK_MFE_APP=null
     tutor config save --set MFE_PROFILE_MFE_APP=null
+    tutor config save --set MFE_DISCUSSIONS_MFE_APP=null
 
 Adding custom translations to your MFEs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -238,11 +247,21 @@ To disable this plugin run::
 
     tutor plugins disable mfe
 
-You will also have to manually remove a few waffle flags::
+You will also have to manually remove a few settings::
 
+    # MFE account
     tutor local run lms ./manage.py lms waffle_delete --flags account.redirect_to_microfrontend
+
+    # MFE profile
     tutor local run lms ./manage.py lms waffle_delete --flags learner_profile.redirect_to_microfrontend
     tutor local run lms site-configuration unset ENABLE_PROFILE_MICROFRONTEND
+
+    # MFE discussions
+    tutor local run lms ./manage.py lms waffle_delete --flags discussions.enable_discussions_mfe
+    tutor local run lms ./manage.py lms waffle_delete --flags discussions.enable_learners_tab_in_discussions_mfe
+    tutor local run lms ./manage.py lms waffle_delete --flags discussions.enable_moderation_reason_codes
+    tutor local run lms ./manage.py lms waffle_delete --flags discussions.enable_reported_content_email_notifications
+    tutor local run lms ./manage.py lms waffle_delete --flags discussions.enable_learners_stats
 
 Finally, restart the platform with::
 
