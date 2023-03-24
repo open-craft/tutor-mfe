@@ -1,5 +1,9 @@
 FROM docker.io/node:16.14-bullseye-slim AS base
 
+# ERR_SOCKET_TIMEOUT mitigation
+RUN npm -g i npm@8.5.1
+RUN npm config ls -l
+
 RUN apt update \
   && apt install -y git \
     # required for cwebp-bin
