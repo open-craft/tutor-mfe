@@ -24,10 +24,8 @@ RUN echo "copying i18n data" \
   echo "done."
 
 # ERR_SOCKET_TIMEOUT mitigation
+RUN npm -g i npm@8.3.0
 RUN npm config ls -l
-RUN npm config set fetch-retries 6
-RUN npm config set fetch-retry-mintimeout 10000
-RUN npm config set fetch-retry-maxtimeout 600000
 
 {% for app in iter_values_named(suffix="MFE_APP") %}
 
