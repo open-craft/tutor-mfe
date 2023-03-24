@@ -1,5 +1,9 @@
 FROM docker.io/node:16.14-bullseye-slim AS base
 
+# ERR_SOCKET_TIMEOUT mitigation
+RUN npm -g i npm@8.3.0
+RUN npm config ls -l
+
 RUN apt update \
   && apt install -y git \
     # required for cwebp-bin
@@ -22,10 +26,6 @@ RUN echo "copying i18n data" \
   && mkdir -p /openedx/i18n/{{ app["name"] }} \
   {%- endfor %}
   echo "done."
-
-# ERR_SOCKET_TIMEOUT mitigation
-RUN npm -g i npm@8.3.0
-RUN npm config ls -l
 
 {% for app in iter_values_named(suffix="MFE_APP") %}
 
