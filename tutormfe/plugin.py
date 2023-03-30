@@ -48,6 +48,7 @@ config = {
             "name": "reports",
             "repository": "https://github.com/open-craft/frontend-app-report-viewer",
             "port": 4080,
+            "version": "master",
         },
     },
 }
