@@ -44,6 +44,11 @@ config = {
                 },
             },
         },
+        "REPORTS_MFE_APP": {
+            "name": "reports",
+            "repository": "https://github.com/open-craft/frontend-app-report-viewer",
+            "port": 4080,
+        },
     },
 }
 
