@@ -20,15 +20,18 @@
         header_up Host {{ LMS_HOST }}
     }
 
+    {% for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
     {% for app_name, app in iter_mfes() %}
-    @mfe_{{ app_name }} {
+    @mfe_{{ app_name }}_{{ domain }} {
+        host {{ domain }}
         path /{{ app_name }} /{{ app_name }}/*
     }
-    handle @mfe_{{ app_name }} {
+    handle @mfe_{{ app_name }}_{{ domain }} {
         uri strip_prefix /{{ app_name }}
-        root * /openedx/dist/{{ app_name }}
+        root * /openedx/dist/{{ app_name }}-{{ domain }}
         try_files /{path} /index.html
         file_server
     }
+    {% endfor %}
     {% endfor %}
 }
