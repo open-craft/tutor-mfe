@@ -11,7 +11,7 @@
             }
         }
     }
-    {% for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, GROVE_COMPREHENSIVE_THEME_BRAND_PACKAGE_NAME) %}
+    {% for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
     {% for app_name, app in iter_mfes() %}
     @mfe_{{ app_name }}_{{ domain }} {
         host {{ domain }}

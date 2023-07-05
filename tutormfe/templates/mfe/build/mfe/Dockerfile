@@ -52,7 +52,7 @@ COPY --from=i18n /openedx/i18n/i18n-merge.js /openedx/i18n/i18n-merge.js
 RUN stat /openedx/app/src/i18n/messages 2> /dev/null || (echo "missing messages folder" && mkdir -p /openedx/app/src/i18n/messages)
 RUN /openedx/i18n/i18n-merge.js /openedx/app/src/i18n/messages /openedx/i18n/{{ app_name }} /openedx/app/src/i18n/messages
 
-{%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, GROVE_COMPREHENSIVE_THEME_BRAND_PACKAGE_NAME) %}
+{%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
 ######## {{ app_name }} for {{ domain }} (common)
 FROM base AS {{ app_name }}-{{ domain }}-common
 COPY --from={{ app_name }}-src /package.json /openedx/app/package.json
@@ -61,14 +61,16 @@ ARG NPM_REGISTRY={{ NPM_REGISTRY }}
 {{ patch("mfe-dockerfile-pre-npm-install") }}
 {{ patch("mfe-dockerfile-pre-npm-install-{}".format(app_name)) }}
 {{ patch("mfe-dockerfile-pre-npm-install-domain-{}".format(domain)) }}
-RUN mkdir -p /openedx/themes
-COPY ./themes /openedx/themes
-RUN npm install '@edx/brand@file:/openedx/themes/{{ theme }}/'
 {#- Required for building optipng on M1 #}
 ENV CPPFLAGS=-DPNG_ARM_NEON_OPT=0
 {#- We define this environment variable to bypass an issue with the installation of pact https://github.com/pact-foundation/pact-js-core/issues/264 #}
 ENV PACT_SKIP_BINARY_INSTALL=true
 RUN {% if is_buildkit_enabled() %}--mount=type=cache,target=/root/.npm,sharing=shared {% endif %}npm clean-install --no-audit --no-fund --registry=$NPM_REGISTRY
+{%- if theme %}
+RUN mkdir -p /openedx/themes
+COPY ./themes /openedx/themes
+RUN npm install '@edx/brand@file:/openedx/themes/{{ theme }}/'
+{%- endif %}
 {{ patch("mfe-dockerfile-post-npm-install") }}
 {{ patch("mfe-dockerfile-post-npm-install-{}".format(app_name)) }}
 {{ patch("mfe-dockerfile-post-npm-install-domain-{}".format(domain)) }}
@@ -92,7 +94,7 @@ CMD ["/bin/bash", "-c", "npm run start --- --config ./webpack.dev-tutor.config.j
 {% endfor %}
 
 # Production images are last to accelerate dev image building
-{%- for domain, domain_config in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, GROVE_COMPREHENSIVE_THEME_BRAND_PACKAGE_NAME) %}
+{%- for domain, domain_config in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
 {%- for app_name, app in iter_mfes() %}
 ######## {{ app_name }} (production)
 FROM {{ app_name }}-{{ domain }}-common AS {{ app_name }}-{{ domain }}-prod
@@ -107,7 +109,7 @@ FROM {{ MFE_CADDY_DOCKER_IMAGE }} as production
 RUN mkdir -p /openedx/dist
 
 # Copy static assets
-{%- for domain, domain_config in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, GROVE_COMPREHENSIVE_THEME_BRAND_PACKAGE_NAME) %}
+{%- for domain, domain_config in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
 {% for app_name, app in iter_mfes() %}
 COPY --from={{ app_name }}-{{ domain }}-prod /openedx/app/dist /openedx/dist/{{ app_name }}-{{ domain }}
 {% endfor %}

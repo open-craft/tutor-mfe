@@ -19,6 +19,7 @@ config = {
         "HOST": "apps.{{ LMS_HOST }}",
         "COMMON_VERSION": "{{ OPENEDX_COMMON_VERSION }}",
         "CADDY_DOCKER_IMAGE": "{{ DOCKER_IMAGE_CADDY }}",
+        "BRAND_PACKAGE_NAME": "",
     },
 }
 
@@ -269,49 +270,3 @@ tutor_hooks.Filters.CONFIG_UNIQUE.add_items(
 tutor_hooks.Filters.CONFIG_OVERRIDES.add_items(
     list(config.get("overrides", {}).items())
 )
-
-
-# mfe_theme_patch = """
-# RUN mkdir -p /openedx/themes
-# COPY ./themes /openedx/themes
-# RUN npm install '@edx/brand@file:/openedx/themes/{}/'
-# """
-#
-#
-# def get_additional_mfe_domains_with_theme(config):
-#
-    # # We are only concerned about MFEs that are using a custom theme, for the
-    # # rest the existing mfe_proxy works.
-    # additional_domains = config.get('GROVE_ADDITIONAL_DOMAINS', [])
-    # for domain_config in additional_domains:
-        # if 'mfe_proxy' in domain_config and 'mfe_theme' in domain_config:
-            # yield domain_config
-#
-#
-# @tutor_hooks.Actions.PROJECT_ROOT_READY.add(priority=11)
-# def _build_mfes_for_additional_domains(root):
-    # config = tutor_config.load_minimal(root)
-    # mfe_domains = list(get_additional_mfe_domains_with_theme(config))
-    # # The default is the list of all supported MFEs in tutor 16.
-    # enabled_mfes = tutor_config.load_minimal(root).get(
-        # "GROVE_ENABLED_MFES",
-        # [
-            # "authn", "account", "communications", "course-authoring",
-            # "discussions", "gradebook", "learning", "ora-grading", "profile"
-        # ]
-    # )
-    # print("----------------------------->")
-#
-#
-    # # for mfe in enabled_mfes:
-    # for domain_config in mfe_domains:
-        # # In the master branch of tutor-mfe, we have the ability to patch
-        # # post-npm-install on a per-mfe basis.
-        # # This will install the specific theme for a site for this MFE.
-        # tutor_hooks.Filters.ENV_PATCHES.add_items([
-            # (
-                # f"mfe-dockerfile-post-npm-install-domain-{domain_config['domain']}",
-                # mfe_theme_patch.format(domain_config['mfe_theme']),
-            # )
-#
-        # ])
