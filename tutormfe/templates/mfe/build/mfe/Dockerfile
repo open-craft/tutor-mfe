@@ -54,10 +54,15 @@ RUN /openedx/i18n/i18n-merge.js /openedx/app/src/i18n/messages /openedx/i18n/{{ 
 
 ######## {{ app_name }} (common)
 FROM base AS {{ app_name }}-common
+COPY --from={{ app_name }}-src /package.json /openedx/app/package.json
+COPY --from={{ app_name }}-src /package-lock.json /openedx/app/package-lock.json
+RUN echo "copying files"\
 {%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
-COPY --from={{ app_name }}-src /package.json /openedx/app/{{ domain }}/package.json
-COPY --from={{ app_name }}-src /package-lock.json /openedx/app/{{ domain }}/package-lock.json
+    && mkdir -p /openedx/app/{{ domain }} \
+    && cp /openedx/app/package.json /openedx/app/{{ domain }}/package.json \
+    && cp /openedx/app/package-lock.json /openedx/app/{{ domain }}/package-lock.json \
 {%- endfor %}
+    && echo "done"
 ARG NPM_REGISTRY={{ NPM_REGISTRY }}
 {{ patch("mfe-dockerfile-pre-npm-install") }}
 {{ patch("mfe-dockerfile-pre-npm-install-{}".format(app_name)) }}
@@ -68,17 +73,23 @@ ENV PACT_SKIP_BINARY_INSTALL=true
 RUN mkdir -p /openedx/themes
 COPY ./themes /openedx/themes
 
+RUN {% if is_buildkit_enabled() %}--mount=type=cache,target=/root/.npm,sharing=shared {% endif %} echo "building MFEs" \
 {%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
-RUN {% if is_buildkit_enabled() %}--mount=type=cache,target=/root/.npm,sharing=shared {% endif %} cd {{ domain }} && npm clean-install --no-audit --no-fund --registry=$NPM_REGISTRY
+  && npm clean-install --prefix={{domain}} --no-audit --no-fund --registry=$NPM_REGISTRY \
 {%- if theme %}
-RUN npm install '@edx/brand@file:/openedx/themes/{{ theme }}/'
+  && npm install --prefix={{domain}} '@edx/brand@file:/openedx/themes/{{ theme }}/' \
 {%- endif %}
+{%- endfor %}
+  && echo "done"
 {{ patch("mfe-dockerfile-post-npm-install") }}
 {{ patch("mfe-dockerfile-post-npm-install-{}".format(app_name)) }}
-{{ patch("mfe-dockerfile-post-npm-install-domain-{}".format(domain)) }}
-COPY --from={{ app_name }}-src / /openedx/app/{{ domain }}
-COPY --from={{ app_name }}-i18n /openedx/app/src/i18n/messages /openedx/app/{{ domain }}/src/i18n/messages
+COPY --from={{ app_name }}-src / /openedx/base
+COPY --from={{ app_name }}-i18n /openedx/app/src/i18n/messages /openedx/base/src/i18n/messages
+RUN echo "copying" \
+{%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
+  && cp -r /openedx/base/* /openedx/app/{{ domain }}/ \
 {%- endfor %}
+  && echo "done"
 EXPOSE {{ app['port'] }}
 
 # Configuration needed at build time
@@ -101,10 +112,16 @@ CMD ["/bin/bash", "-c", "npm run start --- --config ./webpack.dev-tutor.config.j
 ######## {{ app_name }} (production)
 FROM {{ app_name }}-common AS {{ app_name }}-prod
 ENV NODE_ENV=production
+
+RUN echo "building mfes" && mkdir -p /openedx/dist && ls -lah \
 {%- for domain, domain_config in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
-RUN cd {{ domain }} && npm run build
-{% endfor %}
-{% endfor %}
+  && ls -lah {{domain}} \
+  && npm run --prefix={{ domain }} build  \
+  && mkdir -p /openedx/dist/{{ app_name }}-{{ domain }} \
+  && cp -r {{domain}}/dist/* /openedx/dist/{{ app_name }}-{{ domain }} \
+{%- endfor %}
+  && echo "done"
+{%- endfor %}
 
 ####### final production image with all static assets
 FROM {{ MFE_CADDY_DOCKER_IMAGE }} as production
@@ -112,8 +129,6 @@ FROM {{ MFE_CADDY_DOCKER_IMAGE }} as production
 RUN mkdir -p /openedx/dist
 
 # Copy static assets
-{%- for domain, domain_config in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
 {% for app_name, app in iter_mfes() %}
-COPY --from={{ app_name }}-prod /openedx/app/{{ domain }}/dist /openedx/dist/{{ app_name }}-{{ domain }}
-{% endfor %}
+COPY --from={{ app_name }}-prod /openedx/dist/ /openedx/dist/
 {% endfor %}
