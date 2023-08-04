@@ -6,7 +6,7 @@ import typing as t
 
 import pkg_resources
 
-from tutor import hooks as tutor_hooks
+from tutor import hooks as tutor_hooks, config as tutor_config
 from tutor.hooks import priorities
 
 from .__about__ import __version__, __version_suffix__
@@ -19,6 +19,7 @@ config = {
         "HOST": "apps.{{ LMS_HOST }}",
         "COMMON_VERSION": "{{ OPENEDX_COMMON_VERSION }}",
         "CADDY_DOCKER_IMAGE": "{{ DOCKER_IMAGE_CADDY }}",
+        "BRAND_PACKAGE_NAME": "",
     },
 }
 
@@ -93,6 +94,32 @@ def iter_mfes() -> t.Iterable[tuple[str, MFE_ATTRS_TYPE]]:
     """
     yield from MFE_APPS.apply({}).items()
 
+def iter_domains(additional_domains: list[dict[str, str]], main_host:str, main_theme:str) -> t.Iterable[tuple[str, str]]:
+    """
+    Iterate over all domains that have an MFE enabled.
+
+    It yields the name (domain) of each site and its corresponding theme.
+
+    Args:
+        additional_domains (list): A list of additional domain configurations.
+            Each domain configuration is a dictionary that should contain the keys 'domain',
+            'mfe_proxy', and 'mfe_theme'. The 'domain' key should contain the domain of the site,
+            the 'mfe_proxy' key should be set to the backend serving MFEs, but here it just
+            indicates whether MFEs are enabled for the site, and the 'mfe_theme' key should
+            contain the name of theme of the site.
+        main_host (str): The name of the main site.
+        main_theme (str): The theme of the main site.
+
+    Yield:
+        tuple[str, str]: A tuple containing the name (domain) and theme of each site.
+    """
+    yield main_host, main_theme
+    for domain_config in additional_domains:
+        # If the domain has an mfe_proxy field it is serving MFEs. If it has mfe_theme set
+        # then we need to build a separate set of MFEs for it.
+        if 'mfe_proxy' in domain_config and 'mfe_theme' in domain_config:
+            yield domain_config['domain'], domain_config['mfe_theme']
+
 
 def is_mfe_enabled(mfe_name: str) -> bool:
     return mfe_name in MFE_APPS.apply({})
@@ -100,7 +127,7 @@ def is_mfe_enabled(mfe_name: str) -> bool:
 
 # Make the mfe functions available within templates
 tutor_hooks.Filters.ENV_TEMPLATE_VARIABLES.add_items(
-    [("iter_mfes", iter_mfes), ("is_mfe_enabled", is_mfe_enabled)]
+    [("iter_mfes", iter_mfes), ("is_mfe_enabled", is_mfe_enabled), ("iter_domains", iter_domains)]
 )
 
 
