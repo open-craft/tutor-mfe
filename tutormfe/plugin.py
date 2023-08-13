@@ -26,8 +26,9 @@ config = {
         },
         "GRADEBOOK_MFE_APP": {
             "name": "gradebook",
-            "repository": "https://github.com/edx/frontend-app-gradebook",
+            "repository": "https://github.com/open-craft/frontend-app-gradebook",
             "port": 1994,
+            "version": "opencraft-release/nutmeg.2",
         },
         "LEARNING_MFE_APP": {
             "name": "learning",
