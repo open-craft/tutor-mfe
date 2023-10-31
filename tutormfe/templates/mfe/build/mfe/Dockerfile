@@ -79,10 +79,10 @@ RUN {% if is_buildkit_enabled() %}--mount=type=cache,target=/root/.npm,sharing=s
 #  && cp -r /openedx/base/. ./{{domain}}/ \
 #{%- endfor %}
   && echo "done"
-{{ patch("mfe-dockerfile-post-npm-install") }}
-{{ patch("mfe-dockerfile-post-npm-install-{}".format(app_name)) }}
 COPY --from={{ app_name }}-src / /openedx/base
 COPY --from={{ app_name }}-i18n /openedx/app/src/i18n/messages /openedx/base/src/i18n/messages
+{{ patch("mfe-dockerfile-post-npm-install") }}
+{{ patch("mfe-dockerfile-post-npm-install-{}".format(app_name)) }}
 RUN echo "copying" \
 {%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
   && cp -r /openedx/base/. /openedx/app/{{ domain }} \
