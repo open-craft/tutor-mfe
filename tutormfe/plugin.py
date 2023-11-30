@@ -50,7 +50,7 @@ CORE_MFE_APPS: dict[str, MFE_ATTRS_TYPE] = {
         "refs": get_github_refs_path("open-craft/frontend-app-course-authoring"),
         "port": 2001,
     },
-    # We activate this MFE to avoid use edx-platform views because of bugs on the sandbox.
+    # We activate this MFE to avoid using edx-platform views because of bugs on the sandbox.
     "learning": {
         "repository": "https://github.com/openedx/frontend-app-learning",
         "refs": get_github_refs_path("openedx/frontend-app-learning"),
