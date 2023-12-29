@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import os
 import typing as t
 from glob import glob
@@ -28,32 +29,15 @@ config = {
     },
 }
 
-
-def get_github_refs_path(name: str) -> str:
-    """
-    Generate a URL to access refs in heads (nightly) or tags (stable) via Github API.
-    Args:
-        name (str): Consisted of the repository owner and the repository name, as a string in 'owner/repo' format.
-
-    Returns:
-        str: A string URL to the Github API, pointing to heads if version_suffix is set, tags otherwise.
-
-    """
-
-    return f"https://api.github.com/repos/{name}/git/refs/{'heads' if __version_suffix__ else 'tags'}"
-
-
 CORE_MFE_APPS: dict[str, MFE_ATTRS_TYPE] = {
     "course-authoring": {
         "repository": "https://github.com/open-craft/frontend-app-course-authoring.git",
         "version": "taxonomy-sandbox",
-        "refs": get_github_refs_path("open-craft/frontend-app-course-authoring"),
         "port": 2001,
     },
     # We activate this MFE to avoid using edx-platform views because of bugs on the sandbox.
     "learning": {
-        "repository": "https://github.com/openedx/frontend-app-learning",
-        "refs": get_github_refs_path("openedx/frontend-app-learning"),
+        "repository": "https://github.com/openedx/frontend-app-learning.git",
         "port": 2000,
     },
 }
@@ -67,22 +51,46 @@ def _add_core_mfe_apps(apps: dict[str, MFE_ATTRS_TYPE]) -> dict[str, MFE_ATTRS_T
     return apps
 
 
+@functools.lru_cache(maxsize=None)
+def get_mfes() -> dict[str, MFE_ATTRS_TYPE]:
+    """
+    This function is cached for performance.
+    """
+    return MFE_APPS.apply({})
+
+
+@tutor_hooks.Actions.PLUGIN_LOADED.add()
+def _clear_get_mfes_cache(_name: str) -> None:
+    """
+    Don't forget to clear cache, or we'll have some strange surprises...
+    """
+    get_mfes.cache_clear()
+
+
 def iter_mfes() -> t.Iterable[tuple[str, MFE_ATTRS_TYPE]]:
     """
     Yield:
 
         (name, dict)
     """
-    yield from MFE_APPS.apply({}).items()
+    yield from get_mfes().items()
 
 
 def is_mfe_enabled(mfe_name: str) -> bool:
-    return mfe_name in MFE_APPS.apply({})
+    return mfe_name in get_mfes()
+
+
+def get_mfe(mfe_name: str) -> MFE_ATTRS_TYPE:
+    return get_mfes().get(mfe_name, {})
 
 
 # Make the mfe functions available within templates
 tutor_hooks.Filters.ENV_TEMPLATE_VARIABLES.add_items(
-    [("iter_mfes", iter_mfes), ("is_mfe_enabled", is_mfe_enabled)]
+    [
+        ("get_mfe", get_mfe),
+        ("iter_mfes", iter_mfes),
+        ("is_mfe_enabled", is_mfe_enabled),
+    ]
 )
 
 
@@ -110,19 +118,21 @@ tutor_hooks.Filters.IMAGES_PUSH.add_item(
 
 
 # Build, pull and push {mfe}-dev images
-for mfe_name, mfe_attrs in iter_mfes():
-    name = f"{mfe_name}-dev"
-    tag = "{{ DOCKER_REGISTRY }}overhangio/openedx-" + name + ":{{ MFE_VERSION }}"
-    tutor_hooks.Filters.IMAGES_BUILD.add_item(
-        (
-            name,
-            os.path.join("plugins", "mfe", "build", "mfe"),
-            tag,
-            (f"--target={mfe_name}-dev",),
+@tutor_hooks.Actions.PLUGINS_LOADED.add()
+def _mounted_mfe_image_management() -> None:
+    for mfe_name, _mfe_attrs in iter_mfes():
+        name = f"{mfe_name}-dev"
+        tag = "{{ DOCKER_REGISTRY }}overhangio/openedx-" + name + ":{{ MFE_VERSION }}"
+        tutor_hooks.Filters.IMAGES_BUILD.add_item(
+            (
+                name,
+                os.path.join("plugins", "mfe", "build", "mfe"),
+                tag,
+                (f"--target={mfe_name}-dev",),
+            )
         )
-    )
-    tutor_hooks.Filters.IMAGES_PULL.add_item((name, tag))
-    tutor_hooks.Filters.IMAGES_PUSH.add_item((name, tag))
+        tutor_hooks.Filters.IMAGES_PULL.add_item((name, tag))
+        tutor_hooks.Filters.IMAGES_PUSH.add_item((name, tag))
 
 
 # init script
@@ -190,6 +200,10 @@ def _print_mfe_public_hosts(
 def _build_3rd_party_dev_mfes_on_launch(
     image_names: list[str], context_name: t.Literal["local", "dev"]
 ) -> list[str]:
+    if __version_suffix__:
+        # Build mfe image in nightly mode
+        image_names.append("mfe")
+
     for mfe_name, _mfe_attrs in iter_mfes():
         if __version_suffix__ or (
             context_name == "dev" and mfe_name not in CORE_MFE_APPS

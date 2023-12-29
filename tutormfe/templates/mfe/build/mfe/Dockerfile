@@ -1,5 +1,6 @@
+# syntax=docker/dockerfile:1
 # https://hub.docker.com/_/node/tags
-FROM docker.io/node:18.16.0-bullseye-slim AS base
+FROM docker.io/node:18.19.0-bullseye-slim AS base
 
 RUN apt update \
   && apt install -y git \
@@ -17,7 +18,7 @@ RUN apt update \
 
 RUN mkdir -p /openedx/app /openedx/env
 WORKDIR /openedx/app
-ENV PATH ./node_modules/.bin:${PATH}
+ENV PATH /openedx/app/node_modules/.bin:${PATH}
 
 ######## i18n strings
 FROM base AS i18n
@@ -34,10 +35,7 @@ RUN echo "copying i18n data" \
 ######## {{ app_name }} (git)
 FROM base AS {{ app_name }}-git
 {#- Invalidate the build cache if a change is detected upstream #}
-{%- if app.get("refs") %}
-ADD {{ app["refs"] }}/{{ app.get("version", MFE_COMMON_VERSION) }} /tmp/gitref-{{ app_name }}
-{%- endif %}
-RUN git clone {{ app["repository"] }} --branch {{ app.get("version", MFE_COMMON_VERSION) }} --depth 1 .
+ADD --keep-git-dir=true {{ app["repository"] }}#{{ app.get("version", MFE_COMMON_VERSION) }} .
 
 ######## {{ app_name }} (src)
 # Empty layer with just the repo at the root, for build-time bind-mounts
@@ -63,11 +61,18 @@ ARG NPM_REGISTRY={{ NPM_REGISTRY }}
 ENV CPPFLAGS=-DPNG_ARM_NEON_OPT=0
 {#- We define this environment variable to bypass an issue with the installation of pact https://github.com/pact-foundation/pact-js-core/issues/264 #}
 ENV PACT_SKIP_BINARY_INSTALL=true
-RUN {% if is_buildkit_enabled() %}--mount=type=cache,target=/root/.npm,sharing=shared {% endif %}npm clean-install --no-audit --no-fund --registry=$NPM_REGISTRY
+RUN --mount=type=cache,target=/root/.npm,sharing=shared npm clean-install --no-audit --no-fund --registry=$NPM_REGISTRY
 {{ patch("mfe-dockerfile-post-npm-install") }}
 {{ patch("mfe-dockerfile-post-npm-install-{}".format(app_name)) }}
 COPY --from={{ app_name }}-src / /openedx/app
 COPY --from={{ app_name }}-i18n /openedx/app/src/i18n/messages /openedx/app/src/i18n/messages
+
+# Whenever a new MFE supports Atlas, it should be added to this list.
+# When all MFEs support Atlas, this if-statement should be removed.
+{% if app_name in ["communications"] %}
+RUN make OPENEDX_ATLAS_PULL=true pull_translations
+{% endif %}
+
 EXPOSE {{ app['port'] }}
 
 # Configuration needed at build time
@@ -93,6 +98,8 @@ CMD ["/bin/bash", "-c", "npm run start --- --config ./webpack.dev-tutor.config.j
 FROM {{ app_name }}-common AS {{ app_name }}-prod
 ENV NODE_ENV=production
 RUN npm run build
+{{ patch("mfe-dockerfile-post-npm-build") }}
+{{ patch("mfe-dockerfile-post-npm-build-{}".format(app_name)) }}
 {% endfor %}
 
 ####### final production image with all static assets
