@@ -5,9 +5,12 @@ COURSE_AUTHORING_MICROFRONTEND_URL = "{% if ENABLE_HTTPS %}https://{% else %}htt
 
 LOGIN_REDIRECT_WHITELIST.append("{{ MFE_HOST }}")
 CORS_ORIGIN_WHITELIST.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}")
+CORS_ORIGIN_WHITELIST.append("*")
+CSRF_TRUSTED_ORIGINS.append("*")
 CSRF_TRUSTED_ORIGINS.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}")
 CSRF_TRUSTED_ORIGINS.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}*.{{ MFE_HOST }}")
 CSRF_TRUSTED_ORIGINS.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}*.tagging-preview.staging.do.opencraft.hosting")
 ALLOWED_HOSTS.append("{{ MFE_HOST }}")
 ALLOWED_HOSTS.append("tagging-preview.staging.do.opencraft.hosting")
+ALLOWED_HOSTS.append("*")
 CSRF_COOKIE_SECURE = True
