@@ -31,8 +31,7 @@ config = {
 
 CORE_MFE_APPS: dict[str, MFE_ATTRS_TYPE] = {
     "course-authoring": {
-        "repository": "https://github.com/open-craft/frontend-app-course-authoring.git",
-        "version": "taxonomy-sandbox-revert",
+        "repository": "https://github.com/openedx/frontend-app-course-authoring.git",
         "port": 2001,
     },
     # We activate this MFE to avoid using edx-platform views because of bugs on the sandbox.
