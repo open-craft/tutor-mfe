@@ -5,5 +5,6 @@ COURSE_AUTHORING_MICROFRONTEND_URL = "{% if ENABLE_HTTPS %}https://{% else %}htt
 
 LOGIN_REDIRECT_WHITELIST.append("{{ MFE_HOST }}")
 CORS_ORIGIN_WHITELIST.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}")
-CSRF_TRUSTED_ORIGINS.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}")
+CSRF_TRUSTED_ORIGINS.append("{{ MFE_HOST }}")
+CSRF_TRUSTED_ORIGINS_WITH_SCHEME.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}")
 DEBUG = True
