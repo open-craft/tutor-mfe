@@ -85,6 +85,9 @@ def get_mfes() -> dict[str, MFE_ATTRS_TYPE]:
     """
     This function is cached for performance.
     """
+    print("**************************************")
+    print("**************************************")
+    print("Getting Called Now")
     return MFE_APPS.apply({})
 
 
