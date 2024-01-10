@@ -81,7 +81,6 @@ def _add_core_mfe_apps(apps: dict[str, MFE_ATTRS_TYPE]) -> dict[str, MFE_ATTRS_T
     return apps
 
 
-@functools.lru_cache(maxsize=None)
 def get_mfes() -> dict[str, MFE_ATTRS_TYPE]:
     """
     This function is cached for performance.
@@ -89,12 +88,12 @@ def get_mfes() -> dict[str, MFE_ATTRS_TYPE]:
     return MFE_APPS.apply({})
 
 
-@tutor_hooks.Actions.PLUGIN_LOADED.add()
-def _clear_get_mfes_cache(_name: str) -> None:
-    """
-    Don't forget to clear cache, or we'll have some strange surprises...
-    """
-    get_mfes.cache_clear()
+# @tutor_hooks.Actions.PLUGIN_LOADED.add()
+# def _clear_get_mfes_cache(_name: str) -> None:
+#     """
+#     Don't forget to clear cache, or we'll have some strange surprises...
+#     """
+#     get_mfes.cache_clear()
 
 
 def iter_mfes() -> t.Iterable[tuple[str, MFE_ATTRS_TYPE]]:
