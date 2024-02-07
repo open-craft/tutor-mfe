@@ -18,7 +18,7 @@ RUN apt update \
 
 RUN mkdir -p /openedx/app /openedx/env /openedx/base
 WORKDIR /openedx/app
-ENV PATH /openedx/app/node_modules/.bin:${PATH}
+ENV PATH /openedx/app/node_modules/.bin:/openedx/base/node_modules/.bin:${PATH}
 
 ######## i18n strings
 FROM base AS i18n
@@ -83,8 +83,7 @@ COPY --from={{ app_name }}-i18n /openedx/app/src/i18n/messages /openedx/base/src
 # Whenever a new MFE supports Atlas, it should be added to this list.
 # When all MFEs support Atlas, this if-statement should be removed.
 {% if app_name in ["communications"] %}
-# TODO: fix this because it fails with "/bin/sh: 2: atlas: not found"
-# RUN cd /openedx/base && make OPENEDX_ATLAS_PULL=true pull_translations
+RUN cd /openedx/base && make OPENEDX_ATLAS_PULL=true pull_translations
 {% endif %}
 
 {{ patch("mfe-dockerfile-post-npm-install") }}
