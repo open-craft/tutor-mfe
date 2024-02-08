@@ -16,9 +16,9 @@ RUN apt update \
     # https://www.npmjs.com/package/canvas
     libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
-RUN mkdir -p /openedx/app /openedx/env
+RUN mkdir -p /openedx/app /openedx/env /openedx/base
 WORKDIR /openedx/app
-ENV PATH /openedx/app/node_modules/.bin:${PATH}
+ENV PATH /openedx/app/node_modules/.bin:/openedx/base/node_modules/.bin:${PATH}
 
 ######## i18n strings
 FROM base AS i18n
@@ -52,8 +52,15 @@ RUN /openedx/i18n/i18n-merge.js /openedx/app/src/i18n/messages /openedx/i18n/{{ 
 
 ######## {{ app_name }} (common)
 FROM base AS {{ app_name }}-common
-COPY --from={{ app_name }}-src /package.json /openedx/app/package.json
-COPY --from={{ app_name }}-src /package-lock.json /openedx/app/package-lock.json
+COPY --from={{ app_name }}-src /package.json /openedx/base/package.json
+COPY --from={{ app_name }}-src /package-lock.json /openedx/base/package-lock.json
+#RUN echo "copying files" \
+#{%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
+#    && mkdir -p /openedx/app/{{ domain }} \
+#    && cp /openedx/app/package.json /openedx/app/{{ domain }}/package.json \
+#    && cp /openedx/app/package-lock.json /openedx/app/{{ domain }}/package-lock.json \
+#{%- endfor %}
+#    && echo "done"
 ARG NPM_REGISTRY={{ NPM_REGISTRY }}
 {{ patch("mfe-dockerfile-pre-npm-install") }}
 {{ patch("mfe-dockerfile-pre-npm-install-{}".format(app_name)) }}
@@ -61,18 +68,34 @@ ARG NPM_REGISTRY={{ NPM_REGISTRY }}
 ENV CPPFLAGS=-DPNG_ARM_NEON_OPT=0
 {#- We define this environment variable to bypass an issue with the installation of pact https://github.com/pact-foundation/pact-js-core/issues/264 #}
 ENV PACT_SKIP_BINARY_INSTALL=true
-RUN --mount=type=cache,target=/root/.npm,sharing=shared npm clean-install --no-audit --no-fund --registry=$NPM_REGISTRY
-{{ patch("mfe-dockerfile-post-npm-install") }}
-{{ patch("mfe-dockerfile-post-npm-install-{}".format(app_name)) }}
-COPY --from={{ app_name }}-src / /openedx/app
-COPY --from={{ app_name }}-i18n /openedx/app/src/i18n/messages /openedx/app/src/i18n/messages
+RUN mkdir -p /openedx/themes
+COPY ./themes /openedx/themes
+
+RUN --mount=type=cache,target=/root/.npm,sharing=shared echo "installing packages" \
+  && npm clean-install --prefix="/openedx/base" --no-audit --no-fund --registry=$NPM_REGISTRY \
+#{%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
+#  && cp -r /openedx/base/. ./{{domain}}/ \
+#{%- endfor %}
+  && echo "done"
+COPY --from={{ app_name }}-src / /openedx/base
+COPY --from={{ app_name }}-i18n /openedx/app/src/i18n/messages /openedx/base/src/i18n/messages
 
 # Whenever a new MFE supports Atlas, it should be added to this list.
 # When all MFEs support Atlas, this if-statement should be removed.
 {% if app_name in ["communications"] %}
-RUN make OPENEDX_ATLAS_PULL=true pull_translations
+RUN cd /openedx/base && make OPENEDX_ATLAS_PULL=true pull_translations
 {% endif %}
 
+{{ patch("mfe-dockerfile-post-npm-install") }}
+{{ patch("mfe-dockerfile-post-npm-install-{}".format(app_name)) }}
+RUN echo "copying" \
+{%- for domain, theme in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
+  && cp -r /openedx/base/. /openedx/app/{{ domain }} \
+{%- if theme %}
+  && npm install --prefix={{domain}} '@edx/brand@file:/openedx/themes/{{ theme }}/' \
+{%- endif %}
+{%- endfor %}
+  && echo "done"
 EXPOSE {{ app['port'] }}
 
 # Configuration needed at build time
@@ -97,10 +120,17 @@ CMD ["/bin/bash", "-c", "npm run start --- --config ./webpack.dev-tutor.config.j
 ######## {{ app_name }} (production)
 FROM {{ app_name }}-common AS {{ app_name }}-prod
 ENV NODE_ENV=production
-RUN npm run build
+
+RUN echo "building mfes" && mkdir -p /openedx/dist \
+{%- for domain, domain_config in iter_domains(GROVE_ADDITIONAL_DOMAINS, MFE_HOST, MFE_BRAND_PACKAGE_NAME) %}
+  && npm run --prefix={{ domain }} build  \
+  && mkdir -p /openedx/dist/{{ app_name }}-{{ domain }} \
+  && cp -r {{domain}}/dist/. /openedx/dist/{{ app_name }}-{{ domain }}/ \
+{%- endfor %}
+  && echo "done"
 {{ patch("mfe-dockerfile-post-npm-build") }}
 {{ patch("mfe-dockerfile-post-npm-build-{}".format(app_name)) }}
-{% endfor %}
+{%- endfor %}
 
 ####### final production image with all static assets
 FROM {{ MFE_CADDY_DOCKER_IMAGE }} as production
@@ -109,5 +139,5 @@ RUN mkdir -p /openedx/dist
 
 # Copy static assets
 {% for app_name, app in iter_mfes() %}
-COPY --from={{ app_name }}-prod /openedx/app/dist /openedx/dist/{{ app_name }}
+COPY --from={{ app_name }}-prod /openedx/dist/ /openedx/dist/
 {% endfor %}
