@@ -46,7 +46,7 @@ def get_github_refs_path(name: str) -> str:
 CORE_MFE_APPS: dict[str, MFE_ATTRS_TYPE] = {
     "course-authoring": {
         "repository": "https://github.com/open-craft/frontend-app-course-authoring.git",
-        "version": "taxonomy-sandbox",
+        "version": "taxonomy-sandbox-20240219",
         "refs": get_github_refs_path("open-craft/frontend-app-course-authoring"),
         "port": 2001,
     },
