@@ -21,7 +21,7 @@ MFE_CONFIG = {
     "STUDIO_BASE_URL": "{{ "https" if ENABLE_HTTPS else "http" }}://{{ CMS_HOST }}",
     "USER_INFO_COOKIE_NAME": "user-info",
     "ACCESS_TOKEN_COOKIE_NAME": "edx-jwt-cookie-header-payload",
-    "ENABLE_TAGGING_TAXONOMY_PAGES": "true",
+    "LIBRARY_MODE": "mixed",
 }
 
 # MFE-specific settings
