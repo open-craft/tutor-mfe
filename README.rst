@@ -40,9 +40,9 @@ To check what the current value of `MFE_HOST` is actually set to, run::
     tutor config printvalue MFE_HOST
 
 Authn
-~~~~~~~~~
+~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/authn.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/authn.png
     :alt: Authn MFE screenshot
 
 This is a micro-frontend application responsible for the login, registration and password reset functionality.
@@ -50,7 +50,7 @@ This is a micro-frontend application responsible for the login, registration and
 Account
 ~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/account.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/account.png
     :alt: Account MFE screenshot
 
 An MFE to manage account-specific information for every LMS user. Each user's account page is available at ``http(s)://{{ MFE_HOST }}/account``. For instance, when running locally: https://apps.local.edly.io/account.
@@ -58,7 +58,7 @@ An MFE to manage account-specific information for every LMS user. Each user's ac
 Communications
 ~~~~~~~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/communications.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/communications.png
     :alt: Communications MFE screenshot
 
 The Communications micro-frontend exposes an interface for course teams to communicate with learners.  It achieves this by allowing instructors to send out emails in bulk, either by scheduling them or on demand.
@@ -66,7 +66,7 @@ The Communications micro-frontend exposes an interface for course teams to commu
 Course Authoring
 ~~~~~~~~~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/course-authoring.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/course-authoring.png
     :alt: Course Authoring MFE screenshot
 
 This MFE is meant for course authors and maintainers. For a given course, it exposes a "Pages & Resources" menu in Studio where one can enable or disable a variety of features, including, for example, the Wiki and Discussions.  Optionally, it allows authors to replace the legacy HTML, Video, and Problem authoring tools with experimental React-based versions, as well as exposing a new proctoring interface that can be enabled if the `edx-exams <https://github.com/edx/edx-exams>`_ service is available.
@@ -74,7 +74,7 @@ This MFE is meant for course authors and maintainers. For a given course, it exp
 Discussions
 ~~~~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/discussions.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/discussions.png
     :alt: Discussions MFE screenshot
 
 The Discussions MFE updates the previous discussions UI with a new look and better features.
@@ -82,7 +82,7 @@ The Discussions MFE updates the previous discussions UI with a new look and bett
 Gradebook
 ~~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/gradebook.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/gradebook.png
     :alt: Gradebook MFE screenshot
 
 This instructor-only MFE is for viewing individual and aggregated grade results for a course. To access this MFE, go to a course → Instructor tab → Student Admin → View gradebook. The URL should be: ``http(s)://{{ MFE_HOST }}/gradebook/{{ course ID }}``. When running locally, the gradebook of the demo course is available at: http://apps.local.edly.io/gradebook/course-v1:edX+DemoX+Demo_Course
@@ -90,7 +90,7 @@ This instructor-only MFE is for viewing individual and aggregated grade results 
 Learner Dashboard
 ~~~~~~~~~~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/learner-dashboard.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/learner-dashboard.png
     :alt: Learner Dashboard MFE screenshot
 
 The Learner Dashboard MFE provides a clean and functional interface to allow learners to view all of their open enrollments, as well as take relevant actions on those enrollments.
@@ -98,7 +98,7 @@ The Learner Dashboard MFE provides a clean and functional interface to allow lea
 Learning
 ~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/learning.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/learning.png
     :alt: Learning MFE screenshot
 
 The Learning MFE replaces the former courseware, which is the core part of the LMS where students follow courses.
@@ -106,15 +106,15 @@ The Learning MFE replaces the former courseware, which is the core part of the L
 ORA Grading
 ~~~~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/ora-grading.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/ora-grading.png
     :alt: ORA Grading MFE screenshot
 
 When enabled, Open Response Assessments ("ORA") that have a staff grading step will link to this new MFE, either when clicking "Grade Available Responses" from the exercise itself, or via a link in the Instructor Dashboard.  It is meant to streamline the grading process with better previews of submitted content.
 
 Profile
-~~~~~~~~~
+~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/screenshots/profile.png
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/profile.png
     :alt: Profile MFE screenshot
 
 Edit and display user-specific profile information. The profile page of every user is visible at ``http(s)://{{ MFE_HOST }}/profile/u/{{ username }}``. For instance, when running locally, the profile page of the "admin" user is: http://apps.local.edly.io/profile/u/admin.
@@ -130,8 +130,11 @@ Adding new MFEs
 
 - As of Tutor v16 (Palm release) it is no longer possible to add new MFEs by creating ``*_MFE_APP`` settings. Instead, users must implement the approach described below.
 - As of Tutor v17 (Quince release) you must make sure that the git URL of your MFE repository ends with ``.git``. Otherwise the plugin build will fail.
+- As of Tutor v18 (Redwood release) all MFEs must provide a ``make pull_translations`` command. Otherwise the plugin build will fail. Providing an empty command is enough to bypass this requirement. See the `Custom translations section <#mfe-custom-translations>`_ for more information.
 
-Other MFE developers can take advantage of this plugin to deploy their own MFEs. To declare a new MFE, create a Tutor plugin and add your MFE configuration to the ``tutormfe.hooks.MFE_APPS`` filter. This configuration should include the name, git repository (and optionally: git branch or tag) and development port. For example::
+Other MFE developers can take advantage of this plugin to deploy their own MFEs. To declare a new MFE, create a Tutor plugin and add your MFE configuration to the ``tutormfe.hooks.MFE_APPS`` filter. This configuration should include the name, git repository (and optionally: git branch or tag) and development port. For example:
+
+.. code-block:: python
 
     from tutormfe.hooks import MFE_APPS
 
@@ -151,8 +154,9 @@ Assets will be served at ``http(s)://{{ MFE_HOST }}/mymfe``. Developers are free
 Disabling individual MFEs
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To disable an existing MFE, remove the corresponding entry from the ``MFE_APPS`` filter. For instance, to disable some of the MFEs that ship with this plugin::
+To disable an existing MFE, remove the corresponding entry from the ``MFE_APPS`` filter. For instance, to disable some of the MFEs that ship with this plugin:
 
+.. code-block:: python
 
     @MFE_APPS.add()
     def _remove_some_my_mfe(mfes):
@@ -160,30 +164,26 @@ To disable an existing MFE, remove the corresponding entry from the ``MFE_APPS``
         mfes.pop("profile")
         return mfes
 
-Adding custom translations to your MFEs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using custom translations to your MFEs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This plugin makes it possible to change existing and add new translation strings to MFEs. Here is how to do it:
+.. _mfe-custom-translations:
 
-1. Identify the ID of the string you would like to translate. For instance, the ID of the "Account Information" string in the account MFE is "account.settings.section.account.information" (see `source <https://github.com/edx/frontend-app-account/blob/1444831833cad4746b9ed14618a499b425ccc907/src/account-settings/AccountSettingsPage.messages.jsx#L34>`__).
-2. Create a folder and i18n file corresponding to your MFE app and language in the Tutor root. This location of this file should be ``/path/to/tutor/env/plugins/mfe/build/mfe/i18n/<app name>/<language code>.json``. For instance, to add French ("fr") translation strings to the account MFE, run::
+During docker image build, this plugin runs ``make pull_translations`` for each Micro-frontend. This
+program is used in the ``Dockerfile`` to pull translations from the `openedx/openedx-translations repository <https://github.com/openedx/openedx-translations>`_ via `openedx-atlas <https://github.com/openedx/openedx-atlas>`_.
 
-    cd "$(tutor config printroot)/env/plugins/mfe/build/mfe/i18n/"
-    mkdir account
-    touch account/fr.json
+The ``make pull_translations`` command passes the ``ATLAS_OPTIONS`` environment variable to the ``atlas pull`` command. This allows specifying a custom repository or branch to pull translations from.
 
-3. Add your entries to this file in JSON format, where the key is the string ID and the value is the actual string. For instance::
+Translations in the MFE plugin as well as other Tutor plugins can be customized with the following configuration 
+variables:
 
-    {
-      "account.settings.section.account.information": "Information du compte"
-    }
+- ``ATLAS_REVISION`` (default: ``"main"`` on nightly and ``"{{ OPENEDX_COMMON_VERSION }}"`` if a named release is used)
+- ``ATLAS_REPOSITORY`` (default: ``"openedx/openedx-translations"``).
+- ``ATLAS_OPTIONS`` (default: ``""``) Pass additional arguments to ``atlas pull``. Refer to the `atlas documentations <https://github.com/openedx/openedx-atlas>`_ for more information.
 
-4. Rebuild the MFE image and restart the MFE with::
-
-    tutor images build mfe
-    tutor local start -d
-
-Your custom translation strings should now appear in your app.
+The
+`Getting and customizing Translations <https://docs.tutor.edly.io/configuration.html#getting-and-customizing-translations>`_
+section in the Tutor configuration documentation explains how to do this.
 
 Customising MFEs
 ~~~~~~~~~~~~~~~~
@@ -191,7 +191,8 @@ Customising MFEs
 .. _mfe-lms-settings:
 
 To change the MFEs logos from the default to your own logos, override the corresponding settings in the MFEs environment using patches `mfe-lms-production-settings` and `mfe-lms-development-settings`. For example, using the following plugin:
-::
+
+.. code-block:: python
 
     from tutor import hooks
 
@@ -218,12 +219,13 @@ To change the MFEs logos from the default to your own logos, override the corres
         ]
     )
 
-If patches are the same in development and production, they can be replaced by a single `mfe-lms-common-settings` patch.
+If patches are the same in development and production, they can be replaced by a single ``mfe-lms-common-settings`` patch.
 
 .. _mfe-docker-post-npm-install:
 
 To install custom components for the MFEs, such as the `header <https://github.com/openedx/frontend-component-header>`_ and `footer <https://github.com/openedx/frontend-component-footer>`_, override the components by adding a patch to ``mfe-dockerfile-post-npm-install`` in your plugin:
-::
+
+.. code-block:: python
 
     from tutor import hooks
 
@@ -240,7 +242,8 @@ To install custom components for the MFEs, such as the `header <https://github.c
     )
 
 The same applies to installing a custom `brand <https://github.com/openedx/brand-openedx>`_ package:
-::
+
+.. code-block:: python
 
     hooks.Filters.ENV_PATCHES.add_item(
         (
@@ -251,7 +254,9 @@ The same applies to installing a custom `brand <https://github.com/openedx/brand
         )
     )
 
-In both cases above, the ``npm`` commands affect every MFE being built.  If you want have different commands apply to different MFEs, you can add one or more patches to ``mfe-dockerfile-post-npm-install-*`` instead.  For instance, you could install one particular version of the header to the Learning MFE by patching ``mfe-dockerfile-post-npm-install-learning``, and another one to the ORA Grading MFE by patching ``mfe-dockerfile-post-npm-install-ora-grading``::
+In both cases above, the ``npm`` commands affect every MFE being built.  If you want have different commands apply to different MFEs, you can add one or more patches to ``mfe-dockerfile-post-npm-install-*`` instead.  For instance, you could install one particular version of the header to the Learning MFE by patching ``mfe-dockerfile-post-npm-install-learning``, and another one to the ORA Grading MFE by patching ``mfe-dockerfile-post-npm-install-ora-grading``:
+
+.. code-block:: python
 
     hooks.Filters.ENV_PATCHES.add_items(
         [
@@ -273,7 +278,8 @@ In both cases above, the ``npm`` commands affect every MFE being built.  If you 
 .. _mfe-docker-pre-npm-build:
 
 In case you need to run additional instructions just before the build step you can use the ``mfe-dockerfile-pre-npm-build`` or ``mfe-dockerfile-pre-npm-build-*`` patches. For example, you may want to override existing env variables or define new ones.
-::
+
+.. code-block:: python
 
     from tutor import hooks
 
@@ -306,7 +312,8 @@ Installing from a private npm registry
 
 In case you need to install components from a private NPM registry, you can append the ``--registry`` option to your install statement or add a ``npm config set`` command to the plugin.
 In some cases, for example when using `GitLab's NPM package registry <https://docs.gitlab.com/ee/user/packages/npm_registry/>`_, you might also need to provide a token for your registry, which can be done with an additional ``npm config set`` command as well:
-::
+
+.. code-block:: python
 
     from tutor import hooks
 
@@ -395,44 +402,52 @@ Finally, restart the platform with::
 Template patch catalog
 ----------------------
 
-This is the list of all patches used across tutor-mfe (outside of any plugin). Alternatively, you can search for patches in tutor-mfe templates by grepping the source code::
-    
+This is the list of all patches used across tutor-mfe (outside of any plugin). Alternatively, you can search for patches in tutor-mfe templates by grepping the source code:
+
+.. code-block:: python
+
     git clone https://github.com/overhangio/tutor-mfe
     cd tutor-mfe
     git grep "{{ patch" -- tutormfe/templates
 
 mfe-lms-development-settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Python-formatted LMS settings in development. Values defined here override the values from `mfe-lms-common-settings <#mfe-lms-common-settings>`_ or `mfe-lms-production-settings <#mfe-lms-production-settings>`_. For an example on the usage of this patch, check out `this section <#mfe-lms-settings>`_.
 
 File changed: ``apps/openedx/settings/lms/development.py``
 
 mfe-lms-production-settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Python-formatted LMS settings in production. Values defined here override the values from `mfe-lms-common-settings <#mfe-lms-common-settings>`_. For an example on the usage of this patch, check out `this section <#mfe-lms-settings>`_.
 
 File changed: ``apps/openedx/settings/lms/production.py``
 
 mfe-lms-common-settings
 ~~~~~~~~~~~~~~~~~~~~~~~
+
 Python-formatted LMS settings used both in production and development.
 
 File changed: ``apps/openedx/settings/partials/common_lms.py``
 
 mfe-webpack-dev-config
 ~~~~~~~~~~~~~~~~~~~~~~
+
 Add any configurations at the end of the development webpack config file in Javascript format.
 
 File changed: ``tutormfe/templates/mfe/apps/mfe/webpack.dev-tutor.config.js``
 
 mfe-dockerfile-pre-npm-install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for before the npm install is initiated.
 
 File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-pre-npm-install-{}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for before the npm install is initiated for a specific MFE. Add the exact MFE name at the end to only change instructions for that MFE.
 
 Example: ``mfe-dockerfile-pre-npm-install-learning`` will only apply any instructions specified for the learning MFE.
@@ -441,18 +456,21 @@ File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-production-final
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions in the final layer. Useful for overriding the CMD or ENTRYPOINT.
 
 File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-post-npm-install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for after the npm install has completed. This will apply the instructions to every MFE. For an example on the usage of this patch, check out `here <#mfe-docker-post-npm-install>`_.
 
 File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-post-npm-install-{}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for after the npm install has completed for a specific MFE. Add the exact MFE name at the end to only change instructions for that MFE. For an example on the usage of this patch, check out `here <#mfe-docker-post-npm-install>`_.
 
 Example: ``mfe-dockerfile-post-npm-install-authn`` will only apply any instructions specified for the authn MFE.
@@ -461,12 +479,14 @@ File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-pre-npm-build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for before the build step initializes. This will apply the instructions to every MFE. For an example on the usage of this patch, see `over here <#mfe-docker-pre-npm-build>`_.
 
 File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-pre-npm-build-{}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for before the build step initializes for a specific MFE. Add the exact MFE name at the end to only change instructions for that MFE. For an example on the usage of this patch, see `over here <#mfe-docker-pre-npm-build>`_.
 
 Example: ``mfe-dockerfile-post-npm-build-learning`` will only apply any instructions specified for the learning MFE.
@@ -475,12 +495,14 @@ File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-post-npm-build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for after the build step has completed. This will apply the instructions to every MFE.
 
 File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-dockerfile-post-npm-build-{}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Add any instructions for after the build step has completed for a specific MFE. Add the exact MFE name at the end to only change instructions for that MFE.
 
 Example: ``mfe-dockerfile-post-npm-build-learning`` will only apply any instructions specified for the learning MFE.
@@ -489,6 +511,7 @@ File changed: ``tutormfe/templates/mfe/build/mfe/Dockerfile``
 
 mfe-caddyfile
 ~~~~~~~~~~~~~
+
 Add any configurations for the mfe-caddyfile.
 
 File changed: ``tutormfe/templates/mfe/apps/mfe/Caddyfile``
@@ -496,6 +519,43 @@ File changed: ``tutormfe/templates/mfe/apps/mfe/Caddyfile``
 
 Troubleshooting
 ---------------
+
+NPM Dependency Conflict When overriding ``@edx/frontend-component-header`` or ``@edx/frontend-component-footer``
+----------------------------------------------------------------------------------------------------------------
+
+When there is a need to customize the ``@edx/frontend-component-header`` or ``@edx/frontend-component-footer`` component, there is a chance that npm dependency conflicts can occur. In the case of such a conflict, perform the following to resolve the conflicts while keeping the customizations in place:
+
+1. Identify your openedx version, for example, ``quince``.
+2. Navigate to `Learning <https://github.com/openedx/frontend-app-learning>`_ and `Learner Dashboard <https://github.com/openedx/frontend-app-learner-dashboard>`_ MFEs repositories and checkout to branch ``open-release/quince.master``. Inspect which header and footer versions are installed from ``package.json``. Learning and Learner Dashboard MFEs are mentioned only as an example. Hence, This step can be applied to all MFEs.
+3. Determine the versions of ``@edx/frontend-platform`` used in MFEs. Also, check that the header/footer you plan to customize is compatible with the same version of ``@edx/frontend-platform`` specified in their ``package.json`` file (peer-dependencies).
+4. Ensure consistency between the versions. For example, If MFE has ``@edx/frontend-platform: 7.0.1``, then customize the header/footer component which has ``@edx/frontend-platform: ^7.0.0`` in ``package.json`` under peer-dependencies
+5. Checkout to that specific tag (e.g: ``v7.0.0``) of header component and customize it
+6. Install the customized header/footer components into your MFEs. This will resolve any npm dependency conflict issues.
+7. All the steps outlined above need to be followed for the footer as well, if you have followed them for the header or vice versa.
+
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/master/media/npm-conflict-deps.png
+    :alt: Observation of MFE header and footer versions
+
+From the above image, it can be observed that ``master`` branch of Learning MFE uses ``@edx/platform@5.6.1`` and Discussions MFE uses ``@edx/platform@7.1.0``. If customized header is created from ``master`` branch, it ensures compatibility with the Discussions MFE as header module supports ``@edx/platform@^7.0.0``. However, the customized header triggers npm dependencies conflit error for learning MFE. 
+In this case, checkout custom branch from ``v4.11.1`` of header for Learning MFE and ``v5.0.0`` for Discussions MFE. You can install your customized header versions in their respective MFEs as shown below::
+
+    hooks.Filters.ENV_PATCHES.add_items(
+        [
+            (
+                "mfe-dockerfile-post-npm-install-learning",
+                """
+        RUN npm install '@edx/frontend-component-header@npm:@custom/frontend-component-header@^4.11.1'
+        """
+            ),
+            (
+                "mfe-dockerfile-post-npm-install-discussions",
+                """
+        RUN npm install '@edx/frontend-component-header@npm:@custom/frontend-component-header@^5.0.0'
+        """
+            ),
+        ]
+    )
+
 
 This Tutor plugin is maintained by Adolfo Brandes from `tCRIL <https://openedx.org>`__. Community support is available from the official `Open edX forum <https://discuss.openedx.org>`__. Do you need help with this plugin? See the `troubleshooting <https://docs.tutor.edly.io/troubleshooting.html>`__ section from the Tutor documentation.
 
