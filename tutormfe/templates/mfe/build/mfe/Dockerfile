@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # https://hub.docker.com/_/node/tags
 FROM docker.io/node:18.19.0-bullseye-slim AS base
 
@@ -25,7 +24,10 @@ ENV PATH /openedx/app/node_modules/.bin:${PATH}
 ######## {{ app_name }} (git)
 FROM base AS {{ app_name }}-git
 {#- Invalidate the build cache if a change is detected upstream #}
-ADD --keep-git-dir=true {{ app["repository"] }}#{{ app.get("version", MFE_COMMON_VERSION) }} .
+{%- if app.get("refs") %}
+ADD {{ app["refs"] }}/{{ app.get("version", MFE_COMMON_VERSION) }} /tmp/gitref-{{ app_name }}
+{%- endif %}
+RUN git clone {{ app["repository"] }} --branch {{ app.get("version", MFE_COMMON_VERSION) }} --depth 1 .
 
 ######## {{ app_name }} (src)
 # Empty layer with just the repo at the root, for build-time bind-mounts
