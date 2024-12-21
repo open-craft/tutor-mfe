@@ -19,6 +19,30 @@ instructions, because git commits are used to generate release notes:
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-19.0.0'></a>
+## v19.0.0 (2024-10-30)
+
+- 💥[Feature] Rename course-authoring MFE to "authoring". Existing URLs are redirected for backward compatibility. (by @regisb)
+
+- [Feature] Upgrade to Node 20. (by @arbrandes)
+
+- 💥[Feature] Upgrade to Sumac (by @hinakhadim)
+
+- [Improvement] Adds support for frontend plugin slot configuration via env.config.jsx. (by @arbrandes)
+
+<a id='changelog-18.1.0'></a>
+## v18.1.0 (2024-12-10)
+
+- 💥 [Deprecation] Drop support for python 3.8 and set Python 3.9 as the minimum supported python version. (by @hinakhadim)
+- 💥[Improvement] Rename Tutor's two branches (by @DawoudSheraz):
+  * Rename **master** to **release**, as this branch runs the latest official Open edX release tag.
+  * Rename **nightly** to **main**, as this branch runs the Open edX master branches, which are the basis for the next Open edX release.
+
+<a id='changelog-18.0.2'></a>
+## v18.0.2 (2024-10-29)
+
+- [Feature] Upgrade upstream apps to open-release/redwood.3. In particular, this will resolve serious issues with [course creation](https://github.com/openedx/frontend-app-authoring/issues/1199) and [language switching](https://github.com/openedx/frontend-app-account/issues/1052). (by @regisb)
+
 <a id='changelog-18.0.1'></a>
 ## v18.0.1 (2024-09-09)
 
