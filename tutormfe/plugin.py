@@ -31,8 +31,8 @@ config = {
 }
 
 CORE_MFE_APPS: dict[str, MFE_ATTRS_TYPE] = {
-    "course-authoring": {
-        "repository": "https://github.com/open-craft/frontend-app-course-authoring.git",
+    "authoring": {
+        "repository": "https://github.com/open-craft/frontend-app-authoring.git",
         "version": "taxonomy-sandbox-20241218",
         "port": 2001,
     },
