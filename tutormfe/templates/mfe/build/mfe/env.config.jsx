@@ -42,7 +42,7 @@ async function setConfig () {
     }
     {%- endfor %}
 
-{ { - patch("mfe-env-config-runtime-final") } }
+    {{ - patch("mfe-env-config-runtime-final") }}
   } catch (err) {
   console.log(err);
   console.log("Change from MFE");
