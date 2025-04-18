@@ -1,7 +1,7 @@
 Micro Frontend base plugin for `Tutor <https://docs.tutor.edly.io>`__
 =========================================================================
 
-This plugin makes it possible to easily add micro frontend (MFE) applications on top of an Open edX platform that runs with Tutor. To learn more about MFEs, please check the `official Open edX documentation <https://edx.readthedocs.io/projects/edx-developer-docs/en/latest/developers_guide/micro_frontends_in_open_edx.html>`__.
+This plugin makes it possible to easily add micro frontend (MFE) applications on top of an Open edX platform that runs with Tutor. To learn more about MFEs, please check the `official Open edX documentation <https://openedx.github.io/frontend-platform/>`__.
 
 In addition, this plugin comes with a few MFEs which are enabled by default:
 
@@ -478,8 +478,6 @@ This works for custom MFEs, as well. For example, if you added your own MFE name
 
     tutor mounts add /path/to/frontend-app-myapp
 
-Similarly, in production, the "mfe" Docker image will be rebuilt automatically during ``tutor local launch``.
-
 .. note::
 
   Docker tries to run as many build processes in parallel as possible, but this can cause failures in the MFE image build.  If you're running into OOM issues, RAM starvation, or network failures during NPM installs, try the following before restarting::
@@ -489,6 +487,13 @@ Similarly, in production, the "mfe" Docker image will be rebuilt automatically d
       max-parallelism = 1
     EOF
     docker buildx create --use --name=singlecpu --config=./buildkitd.toml
+
+Deploying Changes to Production
+-------------------------------
+
+You will need to rebuild the mfe Docker image with your changes, and then deploy it to production - exactly how depends on whether you are running ``tutor local`` or ``tutor k8s``.
+
+Provided the modified codebase is mounted in the same machine where production deployment happens, run ``tutor images build mfe`` and restart your local deployment via ``tutor local stop && tutor local start -d``.
 
 Uninstall
 ---------
@@ -742,7 +747,7 @@ In this case, checkout custom branch from ``v4.11.1`` of header for Learning MFE
     )
 
 
-This Tutor plugin is maintained by Adolfo Brandes from `tCRIL <https://openedx.org>`__. Community support is available from the official `Open edX forum <https://discuss.openedx.org>`__. Do you need help with this plugin? See the `troubleshooting <https://docs.tutor.edly.io/troubleshooting.html>`__ section from the Tutor documentation.
+This Tutor plugin is maintained by Adolfo Brandes from `Axim <https://openedx.atlassian.net/wiki/spaces/COMM/pages/3554082883/Axim+Collaborative>`__. Community support is available from the official `Open edX forum <https://discuss.openedx.org>`__. Do you need help with this plugin? See the `troubleshooting <https://docs.tutor.edly.io/troubleshooting.html>`__ section from the Tutor documentation.
 
 License
 -------
