@@ -34,7 +34,7 @@ config = {
 CORE_MFE_APPS: dict[str, MFE_ATTRS_TYPE] = {
     "authoring": {
         "repository": "https://github.com/open-craft/frontend-app-authoring.git",
-        "version": "taxonomy-sandbox-20250423",
+        "version": "taxonomy-sandbox-20250423-2",
         "port": 2001,
     },
     # We activate this MFE to avoid using edx-platform views because of bugs on the sandbox.
