@@ -11,6 +11,14 @@ function addPlugins(config, slot_name, plugins) {
   config.pluginSlots[slot_name].plugins.push(...plugins);
 }
 
+function addExternalScripts(config, scripts) {
+  if (!config.externalScripts) {
+    config.externalScripts = [];
+  }
+
+  config.externalScripts.push(...scripts);
+}
+
 {{- patch("mfe-env-config-buildtime-definitions") }}
 
 async function setConfig () {
@@ -25,8 +33,31 @@ async function setConfig () {
      * needs to be inside the `try{}` block.
      */
     const { DIRECT_PLUGIN, PLUGIN_OPERATIONS } = await import('@openedx/frontend-plugin-framework');
+    {%- if is_core_plugin_enabled("notifications") %}
+    const { NotificationsTray } = await import('@edx/frontend-plugin-notifications');
+    {%- endif %}
 
     {{- patch("mfe-env-config-runtime-definitions") }}
+
+    {%- if is_core_plugin_enabled("notifications") %}
+    {%- for slot_name in [
+      "org.openedx.frontend.layout.header_desktop_secondary_menu.v1",
+      "org.openedx.frontend.layout.header_learning_help.v1",
+      "org.openedx.frontend.layout.studio_header_search_button_slot.v1",
+    ] %}
+    addPlugins(config, '{{ slot_name }}', [
+      {
+        op: PLUGIN_OPERATIONS.Insert,
+        widget: {
+          id: 'notification-drawer-widget',
+          priority: 10,
+          type: DIRECT_PLUGIN,
+          RenderWidget: NotificationsTray,
+        },
+      },
+    ]);
+    {%- endfor %}
+    {%- endif %}
 
     {%- for slot_name, plugin_config in iter_plugin_slots("all") %}
     addPlugins(config, '{{ slot_name }}', [{{ plugin_config }}]);
@@ -44,6 +75,18 @@ async function setConfig () {
 
     {{- patch("mfe-env-config-runtime-final") }}
   } catch (err) { console.error("env.config.jsx failed to apply: ", err);}
+
+  {%- for script_config in iter_external_scripts("all") %}
+  addExternalScripts(config, [{{ script_config }}]);
+  {%- endfor %}
+
+  {%- for app_name, _ in iter_mfes() %}
+  if (process.env.APP_ID == '{{ app_name }}') {
+    {%- for script_config in iter_external_scripts(app_name) %}
+    addExternalScripts(config, [{{ script_config }}]);
+    {%- endfor %}
+  }
+  {%- endfor %}
 
   return config;
 }

@@ -16,6 +16,11 @@ In addition, this plugin comes with a few MFEs which are enabled by default:
 - `Learning <https://github.com/openedx/frontend-app-learning/>`__
 - `ORA Grading <https://github.com/openedx/frontend-app-ora-grading/>`__
 - `Profile <https://github.com/openedx/frontend-app-profile/>`__
+- `Catalog <https://github.com/openedx/frontend-app-catalog/>`__
+
+In addition, this plugin bundles a number of "core plugins": frontend plugin packages injected into the MFEs above via the plugin slot framework. The following core plugins are enabled by default:
+
+- `Notifications <https://github.com/openedx/frontend-plugin-notifications/>`__ (a notifications tray in the MFE headers)
 
 Instructions for using each of these MFEs are given below.
 
@@ -129,6 +134,13 @@ Profile
 
 Edit and display user-specific profile information. The profile page of every user is visible at ``http(s)://{{ MFE_HOST }}/profile/u/{{ username }}``. For instance, when running locally, the profile page of the "admin" user is: http://apps.local.openedx.io/profile/u/admin.
 
+Catalog
+~~~~~~~~
+
+.. image:: https://raw.githubusercontent.com/overhangio/tutor-mfe/release/media/catalog.png
+    :alt: Catalog MFE screenshot
+
+The Catalog MFE replaces the former Home, Course About and Course catalog pages, which is the main part of the LMS where students start interacting with courses.
 
 MFE management
 --------------
@@ -174,6 +186,30 @@ To disable an existing MFE, remove the corresponding entry from the ``MFE_APPS``
         mfes.pop("profile")
         return mfes
 
+Core plugins
+~~~~~~~~~~~~
+
+Core plugins are bundled frontend plugin packages that ship with tutor-mfe and are injected into the MFEs via the plugin slot framework. They are enabled by default, but operators can disable any of them by popping the corresponding entry from the ``CORE_PLUGINS`` filter, symmetrically to how ``MFE_APPS`` works.
+
+The following core plugins are currently bundled:
+
+- ``notifications``: the `notifications tray <https://github.com/openedx/frontend-plugin-notifications/>`__, added to the learning and Studio headers. Its behaviour can be tuned with three configuration settings:
+
+  - ``NOTIFICATIONS_DEFAULT_FROM_EMAIL`` (default: inherits from ``CONTACT_EMAIL``): the sender address used by notification emails.
+  - ``NOTIFICATIONS_ENABLE_SHOW_EMAIL_CHANNEL`` (default: ``True``): whether to show the email channel in the notification preferences UI.
+  - ``NOTIFICATIONS_ENABLE_SHOW_PUSH_CHANNEL`` (default: ``False``): whether to show the push channel in the notification preferences UI.
+
+To disable the notifications tray (or any other core plugin), add a Tutor plugin with:
+
+.. code-block:: python
+
+    from tutormfe.hooks import CORE_PLUGINS
+
+    @CORE_PLUGINS.add()
+    def _disable_notifications(plugins):
+        plugins.pop("notifications", None)
+        return plugins
+
 Using custom translations to your MFEs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -184,7 +220,7 @@ program is used in the ``Dockerfile`` to pull translations from the `openedx/ope
 
 The ``make pull_translations`` command passes the ``ATLAS_OPTIONS`` environment variable to the ``atlas pull`` command. This allows specifying a custom repository or branch to pull translations from.
 
-Translations in the MFE plugin as well as other Tutor plugins can be customized with the following configuration 
+Translations in the MFE plugin as well as other Tutor plugins can be customized with the following configuration
 variables:
 
 - ``ATLAS_REVISION`` (default: ``"main"`` on tutor Main branch and ``"{{ OPENEDX_COMMON_VERSION }}"`` if a named release is used)
@@ -496,6 +532,87 @@ For instance:
 
 
 Refer to the `patch catalog <#template-patch-catalog>`_ below for more details.
+
+
+Configuring External Scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+External scripts are a frontend-platform feature that allows script loaders to be configured via ``env.config.jsx``. A loader is a JavaScript class with a ``constructor({ config })`` and a ``loadScript()`` method. This plugin provides the ``EXTERNAL_SCRIPTS`` hook so that Tutor plugins can register loaders for MFEs without resorting to patches.
+
+The hook works similarly to ``PLUGIN_SLOTS``. Each item is a tuple of ``(mfe_name, loader_class)``, where ``mfe_name`` is either ``"all"`` (to apply to every MFE) or the name of a specific MFE, and ``loader_class`` is the name of a loader class that will be added to the ``externalScripts`` config array. Frontend-platform instantiates the class at runtime and passes the MFE's runtime config to its constructor.
+
+For instance, to inject a third-party ``<script>`` tag across all MFEs, define a loader directly in ``env.config.jsx``:
+
+.. code-block:: python
+
+    from tutormfe.hooks import EXTERNAL_SCRIPTS
+    from tutor import hooks
+
+    hooks.Filters.ENV_PATCHES.add_item(
+        (
+            "mfe-env-config-buildtime-definitions",
+            """
+    class CustomScriptLoader {
+      constructor({ config }) {
+        this.config = config;
+      }
+
+      loadScript() {
+        if (!this.config.CUSTOM_SCRIPT_URL) {
+          return;
+        }
+        const script = document.createElement('script');
+        script.id = 'custom-script';
+        script.src = this.config.CUSTOM_SCRIPT_URL;
+        document.head.appendChild(script);
+      }
+    }
+    """,
+        )
+    )
+
+    EXTERNAL_SCRIPTS.add_items([
+        (
+            "all",
+            "CustomScriptLoader",
+        ),
+    ])
+
+The ``CustomScriptLoader`` class is defined via the ``mfe-env-config-buildtime-definitions`` patch, and the ``EXTERNAL_SCRIPTS`` hook wires it into the configuration. Frontend-platform instantiates the class at runtime and passes the MFE's runtime config to the constructor, so the loader can read any key from ``MFE_CONFIG`` (here, ``CUSTOM_SCRIPT_URL``, which you would set via the ``mfe-lms-common-settings`` patch or equivalent). The built-in ``GoogleAnalyticsLoader`` in ``@openedx/frontend-platform/scripts`` follows the same pattern with ``config.GOOGLE_ANALYTICS_4_ID`` - you can import it with the ``mfe-env-config-buildtime-imports`` patch and use it with ``EXTERNAL_SCRIPTS`` in the same way.
+
+You can also target a specific MFE. For example, to load a custom script only on the learning MFE:
+
+.. code-block:: python
+
+    from tutormfe.hooks import EXTERNAL_SCRIPTS
+    from tutor import hooks
+
+    hooks.Filters.ENV_PATCHES.add_item(
+        (
+            "mfe-dockerfile-post-npm-install",
+            """
+    RUN npm install @myorg/custom-script-loader
+    """,
+        )
+    )
+
+    hooks.Filters.ENV_PATCHES.add_item(
+        (
+            "mfe-env-config-buildtime-imports",
+            """
+    import { CustomScriptLoader } from '@myorg/custom-script-loader';
+    """,
+        )
+    )
+
+    EXTERNAL_SCRIPTS.add_items([
+        (
+            "learning",
+            "CustomScriptLoader",
+        ),
+    ])
+
+Note that if no external scripts are configured, the ``externalScripts`` key is not set in the config at all, so any MFE-level defaults are preserved.
 
 
 Hosting extra static files

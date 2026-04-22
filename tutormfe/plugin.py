@@ -13,7 +13,14 @@ from tutor.hooks import priorities
 from tutor.types import Config, get_typed
 
 from .__about__ import __version__
-from .hooks import MFE_APPS, MFE_ATTRS_TYPE, PLUGIN_SLOTS
+from .hooks import (
+    CORE_PLUGIN_ATTRS_TYPE,
+    CORE_PLUGINS,
+    EXTERNAL_SCRIPTS,
+    MFE_APPS,
+    MFE_ATTRS_TYPE,
+    PLUGIN_SLOTS,
+)
 
 # Handle version suffix in main mode, just like tutor core
 if __version_suffix__:
@@ -76,6 +83,10 @@ CORE_MFE_APPS: dict[str, MFE_ATTRS_TYPE] = {
         "repository": "https://github.com/openedx/frontend-app-profile.git",
         "port": 1995,
     },
+    "catalog": {
+        "repository": "https://github.com/openedx/frontend-app-catalog.git",
+        "port": 1998,
+    },
 }
 
 
@@ -87,12 +98,52 @@ def _add_core_mfe_apps(apps: dict[str, MFE_ATTRS_TYPE]) -> dict[str, MFE_ATTRS_T
     return apps
 
 
+# Core plugins are bundled frontend plugin packages (and associated wiring) that ship
+# enabled by default. Operators can disable any of them by popping the name from the
+# CORE_PLUGINS filter, symmetric to how MFE_APPS works.
+DEFAULT_CORE_PLUGINS: dict[str, CORE_PLUGIN_ATTRS_TYPE] = {
+    "notifications": {
+        "npm_package": "@edx/frontend-plugin-notifications",
+        "npm_version": "^2.0.3",
+    },
+}
+
+
+@CORE_PLUGINS.add(priority=tutor_hooks.priorities.HIGH)
+def _add_default_core_plugins(
+    plugins: dict[str, CORE_PLUGIN_ATTRS_TYPE],
+) -> dict[str, CORE_PLUGIN_ATTRS_TYPE]:
+    plugins.update(DEFAULT_CORE_PLUGINS)
+    return plugins
+
+
 @tutor_hooks.lru_cache
 def get_mfes() -> dict[str, MFE_ATTRS_TYPE]:
     """
     This function is cached for performance.
     """
     return MFE_APPS.apply({})
+
+
+@tutor_hooks.lru_cache
+def get_core_plugins() -> dict[str, CORE_PLUGIN_ATTRS_TYPE]:
+    """
+    This function is cached for performance.
+    """
+    return CORE_PLUGINS.apply({})
+
+
+def iter_core_plugins() -> t.Iterable[tuple[str, CORE_PLUGIN_ATTRS_TYPE]]:
+    """
+    Yield:
+
+        (name, dict)
+    """
+    yield from get_core_plugins().items()
+
+
+def is_core_plugin_enabled(name: str) -> bool:
+    return name in get_core_plugins()
 
 
 class MFEMountData:
@@ -121,6 +172,14 @@ def get_plugin_slots(mfe_name: str) -> list[tuple[str, str]]:
     return [i[-2:] for i in PLUGIN_SLOTS.iterate() if i[0] == mfe_name]
 
 
+@tutor_hooks.lru_cache
+def get_external_scripts(mfe_name: str) -> list[str]:
+    """
+    This function is cached for performance.
+    """
+    return [i[-1] for i in EXTERNAL_SCRIPTS.iterate() if i[0] == mfe_name]
+
+
 def iter_mfes() -> t.Iterable[tuple[str, MFE_ATTRS_TYPE]]:
     """
     Yield:
@@ -139,6 +198,15 @@ def iter_plugin_slots(mfe_name: str) -> t.Iterable[tuple[str, str]]:
     yield from get_plugin_slots(mfe_name)
 
 
+def iter_external_scripts(mfe_name: str) -> t.Iterable[str]:
+    """
+    Yield:
+
+        (script_config)
+    """
+    yield from get_external_scripts(mfe_name)
+
+
 def is_mfe_enabled(mfe_name: str) -> bool:
     return mfe_name in get_mfes()
 
@@ -153,7 +221,10 @@ tutor_hooks.Filters.ENV_TEMPLATE_VARIABLES.add_items(
         ("get_mfe", get_mfe),
         ("iter_mfes", iter_mfes),
         ("iter_plugin_slots", iter_plugin_slots),
+        ("iter_external_scripts", iter_external_scripts),
         ("is_mfe_enabled", is_mfe_enabled),
+        ("iter_core_plugins", iter_core_plugins),
+        ("is_core_plugin_enabled", is_core_plugin_enabled),
         ("MFEMountData", MFEMountData),
     ]
 )
@@ -321,6 +392,16 @@ tutor_hooks.Filters.CONFIG_UNIQUE.add_items(
 )
 tutor_hooks.Filters.CONFIG_OVERRIDES.add_items(
     list(config.get("overrides", {}).items())
+)
+
+# Notifications core plugin settings. Registered unconditionally: harmless if the
+# plugin is disabled, since nothing will consume them.
+tutor_hooks.Filters.CONFIG_DEFAULTS.add_items(
+    [
+        ("NOTIFICATIONS_ENABLE_SHOW_EMAIL_CHANNEL", True),
+        ("NOTIFICATIONS_ENABLE_SHOW_PUSH_CHANNEL", False),
+        ("NOTIFICATIONS_DEFAULT_FROM_EMAIL", "{{ CONTACT_EMAIL }}"),
+    ]
 )
 
 

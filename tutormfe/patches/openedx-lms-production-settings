@@ -87,9 +87,18 @@ ADMIN_CONSOLE_MICROFRONTEND_URL = "{% if ENABLE_HTTPS %}https://{% else %}http:/
 MFE_CONFIG["ADMIN_CONSOLE_URL"] = ADMIN_CONSOLE_MICROFRONTEND_URL
 {% endif %}
 
+{% if get_mfe("catalog") %}
+CATALOG_MICROFRONTEND_URL = "{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}/catalog"
+{% endif %}
+
 LOGIN_REDIRECT_WHITELIST.append("{{ MFE_HOST }}")
 CORS_ORIGIN_WHITELIST.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}")
 CSRF_TRUSTED_ORIGINS.append("{% if ENABLE_HTTPS %}https://{% else %}http://{% endif %}{{ MFE_HOST }}")
 
 {{ patch("mfe-lms-common-settings") }}
 {{ patch("mfe-lms-production-settings") }}
+
+{% if is_core_plugin_enabled("notifications") %}
+MFE_CONFIG["SHOW_EMAIL_CHANNEL"] = {{ NOTIFICATIONS_ENABLE_SHOW_EMAIL_CHANNEL }}
+MFE_CONFIG["SHOW_PUSH_CHANNEL"] = {{ NOTIFICATIONS_ENABLE_SHOW_PUSH_CHANNEL }}
+{% endif %}
